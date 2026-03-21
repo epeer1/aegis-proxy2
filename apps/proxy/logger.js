@@ -1,6 +1,8 @@
 const pino = require('pino');
 
-const logger = pino({
+const isProd = process.env.NODE_ENV === 'production';
+
+const logger = pino(isProd ? {} : {
     transport: {
         target: 'pino-pretty',
         options: {

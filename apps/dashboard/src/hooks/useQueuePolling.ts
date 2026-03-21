@@ -23,7 +23,7 @@ export function useQueuePolling(apiUrl: string) {
     let isMounted = true;
     const fetchQueue = async () => {
       try {
-        const res = await fetch(`${apiUrl}/queue`);
+        const res = await fetch(`/api/proxy/queue`);
         if (res.ok) {
           const data = await res.json();
           if (isMounted) {

@@ -16,14 +16,14 @@ async function requireAuth0JWT(req, res, next) {
 
     const token = authHeader.split(' ')[1];
 
+    const adminSecret = process.env.ADMIN_SECRET || 'local_dev_secret';
+    if (token === adminSecret) {
+        logSOC('INFO', 'AUTH_MIDDLEWARE', 'Authorized via legacy ADMIN_SECRET fallback.');
+        return next();
+    }
+
     if (!process.env.AUTH0_DOMAIN) {
-        // Fallback for local dev without Auth0 configured
-        const adminSecret = process.env.ADMIN_SECRET || 'local_dev_secret';
-        if (token === adminSecret) {
-            logSOC('INFO', 'AUTH_MIDDLEWARE', 'Authorized via legacy ADMIN_SECRET fallback (No Auth0 Domain Configured).');
-            return next();
-        }
-        logSOC('ERROR', 'AUTH_MIDDLEWARE', 'Invalid ADMIN_SECRET provided during fallback auth.');
+        logSOC('ERROR', 'AUTH_MIDDLEWARE', 'Invalid ADMIN_SECRET provided and no Auth0 domain configured.');
         return res.status(401).json({ error: 'Unauthorized. Invalid legacy token.' });
     }
 
@@ -42,4 +42,20 @@ async function requireAuth0JWT(req, res, next) {
     }
 }
 
-module.exports = { requireAuth0JWT };
+function requirePermission(permission) {
+    return (req, res, next) => {
+        // Fallback for local development
+        if (req.headers.authorization && req.headers.authorization.split(' ')[1] === (process.env.ADMIN_SECRET || 'local_dev_secret')) {
+             return next();
+        }
+
+        const permissions = req.user?.permissions || [];
+        if (!permissions.includes(permission)) {
+            logSOC('WARN', 'RBAC', `User ${req.user?.sub} missing required explicit permission: ${permission}`);
+            return res.status(403).json({ error: `Forbidden. Requires permission: ${permission}` });
+        }
+        next();
+    };
+}
+
+module.exports = { requireAuth0JWT, requirePermission };

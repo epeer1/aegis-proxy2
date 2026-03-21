@@ -1,128 +1,308 @@
-# 🛡️ Aegis Proxy: Zero-Trust Command Center for Autonomous AI
+# Aegis Proxy — Zero-Trust Gateway for Autonomous AI Agents
 
-<p align="center">
-  <em>An Auth0 Token Vault Integration • Enterprise Ready Monorepo</em>
-</p>
-
-## 📖 The Security Gap
-As autonomous AI agents (like AutoGPT or custom LLM scripts) gain traction, giving them unrestricted access to your internal clusters or external APIs creates an immense security risk. 
-
-**The Solution:** Aegis is a zero-trust gateway that sits between your AI agents and the world. It evaluates outgoing network requests using an LLM Policy Engine, safely passing through whitelisted actions while mathematically quarantining destructive operations continuously in RAM. Quarantined actions explicitly require **human-in-the-loop (HITL)** step-up authorization, fully secured via an end-to-end Auth0 trust chain. 
-
-## 🚀 Architecture & Quality Standards
-Aegis has been strictly architected to production-grade standards utilizing a modern **NPM Workspace Monorepo**, encompassing two primary microservices orchestrated seamlessly:
-
-1. **`apps/proxy` (The Zero-Trust Node.js Gateway)**
-   - **Strict Validation**: All incoming autonomous agent payloads are rigorously schema-validated utilizing `zod`.
-   - **Rate Limiting**: Integrated `express-rate-limit` to prevent rogue agents from accidentally generating DDoS loops against the gateway.
-   - **Structured Logging**: Employs `pino` for highly parseable, enterprise-ready JSON logging instead of archaic shell printing.
-   - **Graceful Shutdown**: Intercepts `SIGINT` and `SIGTERM` to safely abort hanging promises and cleanly release sockets during pipeline deploys.
-   - **Zero-Trust Routes**: The core authorization API endpoints are heavily protected via the `requireAuth0JWT` cryptography middleware, strictly verifying the SOC analyst's authorization signature.
-
-2. **`apps/dashboard` (The Next.js SOC Command Center)**
-   - **Modular UX**: The dashboard leverages composable React components and robust polling hooks for a highly responsive, single-pane-of-glass interface.
-   - **Sealed Token Chain**: Employs a bespoke Next.js App Router API proxy (`/api/proxy/[...path]/route.ts`) that securely extracts the active `idToken` from `@auth0/nextjs-auth0` server-side configurations, automatically attaching the authentic JWT to backend gateway traffic.
+Aegis is a security gateway that intercepts outgoing requests from autonomous AI agents (LangChain, AutoGPT, custom LLM scripts, etc.) and enforces human-in-the-loop authorization for destructive operations. Safe actions pass through instantly. Destructive actions are suspended in-memory until a human SOC analyst approves or denies them through a real-time dashboard.
 
 ---
 
-## 🧬 Zero-Trust Data Flow Pipeline
+## What It Does
 
-```mermaid
-sequenceDiagram
-    participant Agent as Autonomous AI (Runtime)
-    participant Gateway as apps/proxy (Node)
-    participant Auth0 as Auth0 Tenant
-    participant SOC as apps/dashboard (Next.js)
+1. An AI agent sends an action payload to the gateway (`POST /proxy/execute`)
+2. The **Policy Engine** classifies the intent as `SAFE` or `DESTRUCTIVE`
+   - Uses an LLM (OpenAI GPT-4o-mini, Anthropic Claude, or local OpenClaw) when available
+   - Falls back to a static keyword heuristic when no LLM API key is configured
+3. `SAFE` → payload is instantly allowed through (HTTP 200)
+4. `DESTRUCTIVE` → the agent's HTTP connection is **suspended** (socket held open in RAM). The request appears on the SOC Dashboard
+5. A human analyst reviews the forensic dossier and clicks **Approve** or **Deny**
+6. On approval, the gateway acquires an Auth0 M2M vault token and releases the suspended socket with the token attached
+7. On denial, the agent receives HTTP 403
 
-    Agent->>Gateway: POST /proxy/execute {action: 'drop_database'}
-    Gateway->>Gateway: Zod Validation & Rate Limit Check
-    Gateway->>Gateway: LLM Policy Engine: [CRITICAL_RISK] Quarantined in RAM
-    Gateway-->>SOC: Broadcast Forensic Payload & Prompt
-    SOC->>SOC: Analyst authenticates explicitly via Auth0 Universal Login
-    SOC->>Gateway: POST /api/proxy/queue/approve (Attaches Auth0 idToken securely)
-    Gateway->>Auth0: Verifies Analyst idToken Signature against JWKS
-    Gateway->>Auth0: POST /oauth/token (Exchange for M2M Vault Delegation Token)
-    Auth0-->>Gateway: Return Authentic Vault Token
-    Gateway->>Agent: Unfreeze Socket & Pass M2M Vault Token to Agent Network
+---
+
+## Architecture
+
+```
+┌──────────────┐        ┌─────────────────────────┐        ┌───────────────────┐
+│   AI Agent   │──POST──▶  apps/proxy (Node.js)   │◀─poll──│  apps/dashboard   │
+│  (Python/JS) │        │  :3001                   │        │  (Next.js) :3000  │
+└──────────────┘        │                          │        └───────────────────┘
+                        │  ┌────────────────────┐  │                  │
+                        │  │ Policy Engine       │  │                  │
+                        │  │ (LLM + heuristic)  │  │          Auth0 Login
+                        │  └────────────────────┘  │          (Universal)
+                        │  ┌────────────────────┐  │                  │
+                        │  │ In-Memory Queue     │  │          ┌──────▼──────┐
+                        │  │ (TTL: 5 min)       │  │          │   Auth0     │
+                        │  └────────────────────┘  │          │   Tenant    │
+                        │  ┌────────────────────┐  │          └─────────────┘
+                        │  │ Auth0 JWT + RBAC   │  │
+                        │  │ M2M Token Cache    │  │
+                        │  └────────────────────┘  │
+                        └─────────────────────────┘
 ```
 
-## ⚙️ Quick Start Installation
+---
 
-### 1. Configure the Environment
-Ensure your Auth0 tenant keys have been strictly mapped into both environments:
-- `apps/proxy/.env` (Requires your `AUTH0_DOMAIN`, `CLIENT_ID`, and `CLIENT_SECRET` for final M2M Vault acquisition).
-- `apps/dashboard/.env.local` (Requires standard `@auth0/nextjs-auth0` Universal Login configurations).
+## Repository Structure
 
-### 2. Boot Using Docker Compose (Recommended)
-You can instantly map the entire microservices mesh leveraging standard Node orchestration:
-```bash
-docker-compose up --build
 ```
-- Custom Dashboard resolves at: `http://localhost:3000`
-- Proxy Gateway resolves at: `http://localhost:3001`
-
-### 3. Or Natively using NPM Workspaces
-If you prefer running them natively on the host:
-```bash
-npm install
-npm run dev --workspace=apps/dashboard
-npm start --workspace=apps/proxy
+aegis-monorepo/
+├── apps/
+│   ├── proxy/                    # Node.js backend gateway
+│   │   ├── server.js             # Express app, 5 routes, graceful shutdown
+│   │   ├── policyEngine.js       # LLM classification + keyword fallback
+│   │   ├── queueManager.js       # In-memory queue with TTL cleanup
+│   │   ├── authMiddleware.js     # Auth0 JWT verification + RBAC
+│   │   ├── tokenCache.js         # M2M token caching with TTL
+│   │   ├── logger.js             # Pino structured logging (pretty in dev, JSON in prod)
+│   │   └── tests/                # Jest test suite (14 tests)
+│   │       ├── policy_engine.test.js
+│   │       └── routes.test.js
+│   └── dashboard/                # Next.js SOC analyst UI
+│       └── src/
+│           ├── app/
+│           │   ├── page.tsx              # Main dashboard (modular component composition)
+│           │   ├── layout.tsx            # Root layout with Auth0 provider
+│           │   └── api/proxy/[...path]/  # Server-side API proxy to backend
+│           ├── components/soc/           # ForensicCard, SOCHeader, AgentSimulator, Toast
+│           ├── hooks/                    # useQueuePolling, useAuthProfile
+│           └── lib/                      # Auth0 client, utilities
+├── scripts/
+│   ├── simulator/                # Python agent simulator
+│   │   ├── autonomous_client.py  # Sends safe + destructive payloads
+│   │   └── requirements.txt
+│   └── pipelines/                # CI/CD pipeline scripts
+├── docs/                         # Documentation (hackathon notes, reviews)
+├── docker-compose.yml            # Local multi-service orchestration
+├── package.json                  # NPM workspaces root
+└── .gitignore
 ```
 
-## 🎬 Live Agent Simulation Testing
+---
 
-Aegis ships with a ready-to-use Python simulator that algorithmically proves the zero-trust workflow. 
+## Tech Stack
 
-1. Ensure the `docker-compose` mesh or local servers are actively running.
-2. Initialize your local terminal simulator:
+| Layer | Technology |
+|-------|-----------|
+| **Backend** | Node.js 20, Express 5, Zod, Pino |
+| **Frontend** | Next.js 16, React 19, Tailwind CSS 4, shadcn/ui |
+| **Auth** | Auth0 (Universal Login + M2M Client Credentials), jose (JWT verification) |
+| **LLM** | OpenAI GPT-4o-mini, Anthropic Claude 3 Haiku, or local OpenClaw |
+| **Testing** | Jest 30, Supertest, Babel (ESM→CJS transform for jose) |
+| **Infra** | Docker Compose, NPM Workspaces |
+
+---
+
+## API Endpoints (Backend — `apps/proxy`)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/proxy/execute` | None (rate-limited) | Main gateway. Accepts agent payloads, classifies intent, allows or suspends |
+| `GET` | `/queue` | JWT + `view:queue` | Returns all pending requests for the SOC dashboard |
+| `POST` | `/queue/approve/:id` | JWT + `approve:requests` | Approves a suspended request, acquires M2M vault token |
+| `POST` | `/queue/deny/:id` | JWT + `deny:requests` | Denies a suspended request, returns 403 to the agent |
+| `GET` | `/health` | None | Health check with uptime and queue size |
+
+**Rate limiting**: `/proxy/execute` is limited to 100 requests per IP per minute.
+
+**Payload validation**: All payloads must include an `action` field (enforced via Zod schema).
+
+---
+
+## Authentication & Authorization
+
+The system uses a dual-layer Auth0 integration:
+
+1. **Dashboard → Backend (User auth)**: The Next.js dashboard authenticates users via Auth0 Universal Login. A server-side API proxy route (`/api/proxy/[...path]`) extracts the user's `idToken` from the Auth0 session and forwards it to the backend as a `Bearer` token.
+
+2. **Backend → Auth0 (M2M auth)**: When a request is approved, the backend uses Client Credentials to acquire an M2M access token from Auth0. This token is cached in-memory with a 5-minute pre-expiry grace period (`tokenCache.js`).
+
+3. **RBAC**: Three permissions are enforced via middleware:
+   - `view:queue` — read the pending queue
+   - `approve:requests` — approve destructive actions
+   - `deny:requests` — deny destructive actions
+
+**Local dev bypass**: When `ADMIN_SECRET` (default: `local_dev_secret`) is sent as the Bearer token, the middleware skips JWT verification. This allows testing without Auth0 configuration.
+
+---
+
+## Prerequisites
+
+- **Node.js** ≥ 20
+- **Python** ≥ 3.10 (for the simulator)
+- **Auth0 tenant** (optional for local dev; required for production auth)
+- **LLM API key** (optional; falls back to keyword heuristics without one)
+
+---
+
+## Environment Variables
+
+### Backend (`apps/proxy/.env`)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `AUTH0_DOMAIN` | For production auth | Your Auth0 tenant domain (e.g. `dev-xxx.us.auth0.com`) |
+| `AUTH0_CLIENT_ID` | For M2M tokens | Auth0 application Client ID |
+| `AUTH0_CLIENT_SECRET` | For M2M tokens | Auth0 application Client Secret |
+| `OPENAI_API_KEY` | No | Enables GPT-4o-mini policy evaluation |
+| `ANTHROPIC_API_KEY` | No | Alternative: enables Claude 3 Haiku evaluation |
+| `OPENCLAW_API_BASE` | No | Alternative: local OpenClaw LLM endpoint |
+| `ALLOWED_ORIGINS` | No | Comma-separated CORS origins (default: `http://localhost:3000`) |
+| `PORT` | No | Server port (default: `3001`) |
+| `ADMIN_SECRET` | No | Dev bypass token (default: `local_dev_secret`) |
+
+### Frontend (`apps/dashboard/.env.local`)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `APP_BASE_URL` | Yes | Dashboard URL (e.g. `http://localhost:3000`) |
+| `AUTH0_DOMAIN` | Yes | Auth0 tenant domain |
+| `AUTH0_CLIENT_ID` | Yes | Auth0 application Client ID |
+| `AUTH0_CLIENT_SECRET` | Yes | Auth0 application Client Secret |
+| `AUTH0_SECRET` | Yes | A random 32+ char string for session encryption |
+| `NEXT_PUBLIC_API_URL` | No | Backend URL (default: `http://localhost:3001`) |
+
+---
+
+## Quick Start
+
+### 1. Install dependencies
+
 ```bash
-source venv/bin/activate
+cd /path/to/aegis-monorepo
+npm install              # Installs all workspace dependencies
+```
+
+### 2. Configure environment
+
+```bash
+# Backend
+cp apps/proxy/.env.example apps/proxy/.env
+# Fill in AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET, and optionally OPENAI_API_KEY
+
+# Frontend
+cp apps/dashboard/.env.local.example apps/dashboard/.env.local
+# Fill in AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET, AUTH0_SECRET, APP_BASE_URL
+```
+
+### 3. Start the services
+
+**Terminal 1 — Backend:**
+```bash
+cd apps/proxy && npm start
+# Gateway running on http://localhost:3001
+```
+
+**Terminal 2 — Frontend:**
+```bash
+cd apps/dashboard && npm run dev
+# Dashboard running on http://localhost:3000
+```
+
+### 4. Run the agent simulator
+
+**Terminal 3:**
+```bash
 cd scripts/simulator
-pip install -r requirements.txt
+pip install requests
 python3 autonomous_client.py
 ```
-3. Watch as the simple **"Check Weather"** intent organically routes straight through, while the **"Delete legacy metrics"** intent aggressively hangs on the socket—requiring you to authenticate natively on the `localhost:3000` SOC Dashboard to inject your cryptographic authorization seal.
+
+The simulator sends two payloads:
+- `get_weather` → classified SAFE, allowed instantly
+- `delete_database` → classified DESTRUCTIVE, suspended until you approve/deny on the dashboard
+
+### Alternative: Docker Compose
+
+```bash
+docker compose up
+# Proxy on :3001, Dashboard on :3000
+```
 
 ---
 
-## 🔌 Connecting Your Custom Agents (LangChain, AutoGPT, etc.)
+## Connecting Your Own Agents
 
-Connecting your own autonomous framework to the Aegis Proxy is incredibly simple. Instead of your agent executing a sensitive action or tool directly, you inject a single network request to the Aegis Gateway to mathematically ask for permission. 
-
-### Implementation Guide (Python)
-
-Whenever your agent decides it needs to perform an action, build a JSON payload detailing its intent, and `POST` it to the Gateway with a long timeout (to account for the human-in-the-loop delay). 
+Instead of executing a sensitive action directly, have your agent POST to the Aegis gateway:
 
 ```python
 import requests
 
 AEGIS_GATEWAY = "http://localhost:3001/proxy/execute"
 
-def execute_agent_tool(action_name, target_data, agent_reasoning):
-    payload = {
-        "agent_id": "my-production-agent-01",
-        "action": action_name,
-        "target": target_data,
-        "reasoning": agent_reasoning
-    }
+payload = {
+    "agent_id": "my-agent",
+    "action": "delete_user_data",
+    "target": "user_123",
+    "reasoning": "User requested account deletion"
+}
 
-    try:
-        # NOTE: Set a high timeout. If the AI intent is flagged as destructive, 
-        # Aegis will aggressively suspend the socket until a human SOC analyst
-        # opens the dashboard and authenticates heavily via Auth0!
-        response = requests.post(AEGIS_GATEWAY, json=payload, timeout=300)
-        
-        if response.status_code == 200:
-            vault_token = response.json().get("auth0_vault_delegation")
-            print(f"✅ Approved. Executing tool using secure Vault Token: {vault_token}...")
-            return True
+# Timeout should be high — the socket will hang until a human approves
+response = requests.post(AEGIS_GATEWAY, json=payload, timeout=300)
 
-        elif response.status_code == 403:
-            print("❌ Action Rejected by SOC Analyst.")
-            # For LangChain/LlamaIndex, simply return this string to the LLM 
-            # so it knows to adjust its plan and try a non-destructive method!
-            return False
-
-    except requests.exceptions.Timeout:
-        print("⏰ Timed out waiting for SOC approval.")
+if response.status_code == 200:
+    result = response.json()
+    if result["proxy_action"] == "allowed":
+        # Safe action, proceed
+        pass
+    elif result["proxy_action"] == "step_up_approved":
+        # Human approved, vault token available
+        vault_token = result["auth0_vault_delegation"]
+elif response.status_code == 403:
+    # Human denied the action
+    pass
 ```
+
+The only requirement is that the payload must contain an `action` field (string).
+
+---
+
+## Testing
+
+```bash
+cd apps/proxy && npm test
+```
+
+Runs 14 tests across two suites:
+- **policy_engine.test.js** (7 tests) — verifies heuristic classification for safe, destructive, empty, nested, and boundary payloads
+- **routes.test.js** (7 tests) — integration tests for all HTTP routes including auth, approve/deny flows, and queue access
+
+> **Note**: Tests automatically unset LLM API keys to force deterministic heuristic evaluation. The `jose` ESM library is transpiled via Babel for Jest CJS compatibility.
+
+---
+
+## Troubleshooting
+
+| Problem | Cause | Fix |
+|---------|-------|-----|
+| `401` on every `/queue` poll | Dashboard not authenticated or dev bypass not active | Ensure `ADMIN_SECRET` bypass is in the proxy route, or log in via Auth0 |
+| `unauthorized_fallback_lock` as vault token | `AUTH0_DOMAIN` not set or commented out | Uncomment `AUTH0_DOMAIN` in `apps/proxy/.env` and restart |
+| Jest fails with `jose` import error | ESM/CJS incompatibility | Ensure `babel.config.js` exists and `transformIgnorePatterns` is set in `package.json` |
+| Dashboard shows "Gateway unreachable" | Backend not running | Start the proxy: `cd apps/proxy && npm start` |
+| `pino-pretty` not found in production | Missing dev dependency | Install `pino-pretty` or set `NODE_ENV=production` to skip it |
+
+---
+
+## Known Limitations
+
+- **In-memory queue**: Pending requests are stored in RAM. If the backend restarts, all suspended requests are lost. A persistent store (Redis, PostgreSQL) would be needed for production.
+- **HTTP long-polling**: The dashboard polls `/queue` every 1.5 seconds. WebSockets or SSE would provide real-time updates with lower overhead.
+- **Single-process**: The backend runs as a single Node.js process. Horizontal scaling would require shared state for the queue.
+- **No audit log**: Approve/deny actions are logged to stdout but not persisted to a database for compliance.
+
+---
+
+## Auth0 RBAC Setup (Production)
+
+To enable real RBAC in Auth0:
+
+1. Go to **Applications → APIs** → Select your API
+2. Enable **"Enable RBAC"** and **"Add Permissions in the Access Token"**
+3. Define permissions: `view:queue`, `approve:requests`, `deny:requests`
+4. Create a role **"SOC Analyst"** and assign all 3 permissions
+5. Assign the role to your user accounts
+
+---
+
+## License
+
+ISC

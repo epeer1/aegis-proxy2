@@ -12,6 +12,11 @@ describe('Aegis Proxy Integrated Routes', () => {
         // By default for tests, ensure we are falling back to ADMIN_SECRET for token checks
         delete process.env.AUTH0_DOMAIN;
         process.env.ADMIN_SECRET = 'test_secret';
+
+        // Ensure LLM keys are unset to force the deterministic heuristic engine for local tests
+        delete process.env.OPENAI_API_KEY;
+        delete process.env.ANTHROPIC_API_KEY;
+        delete process.env.OPENCLAW_API_BASE;
     });
 
     afterAll(() => {
@@ -64,9 +69,11 @@ describe('Aegis Proxy Integrated Routes', () => {
     describe('GET /queue', () => {
         it('should return pending queue items', async () => {
             // Force a payload into queue manager explicitly
-            queueManager.add({ test: 'payload' }, { isDestructive: true }, 'mock_token', { headersSent: false });
+            queueManager.add({ test: 'payload' }, { isDestructive: true }, { headersSent: false });
             
-            const res = await request(app).get('/queue');
+            const res = await request(app)
+                .get('/queue')
+                .set('Authorization', 'Bearer test_secret');
             expect(res.statusCode).toEqual(200);
             expect(res.body.length).toEqual(1);
             expect(res.body[0].payload.test).toEqual('payload');
@@ -94,7 +101,7 @@ describe('Aegis Proxy Integrated Routes', () => {
                 json: jest.fn()
             };
             
-            const id = queueManager.add({ test: 'payload' }, { isDestructive: true }, 'mock_token', mockRes);
+            const id = queueManager.add({ test: 'payload' }, { isDestructive: true }, mockRes);
             expect(queueManager.size()).toEqual(1);
 
             const res = await request(app)
@@ -121,7 +128,7 @@ describe('Aegis Proxy Integrated Routes', () => {
                 json: jest.fn()
             };
             
-            const id = queueManager.add({ test: 'payload' }, { isDestructive: true }, 'mock_token', mockRes);
+            const id = queueManager.add({ test: 'payload' }, { isDestructive: true }, mockRes);
 
             const res = await request(app)
                 .post(`/queue/deny/${id}`)

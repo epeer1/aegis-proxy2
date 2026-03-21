@@ -5,9 +5,10 @@ const axios = require('axios');
 const { PolicyEngine } = require('./policyEngine');
 const { logSOC } = require('./logger');
 const { queueManager } = require('./queueManager');
-const { requireAuth0JWT } = require('./authMiddleware');
+const { requireAuth0JWT, requirePermission } = require('./authMiddleware');
 const rateLimit = require('express-rate-limit');
 const { z } = require('zod');
+const { getVaultToken } = require('./tokenCache');
 
 const app = express();
 
@@ -87,7 +88,7 @@ app.post('/proxy/execute', gatewayLimiter, async (req, res, next) => {
 // =========================================================================
 // ROUTE 2: THE APPROVER SWITCHBOARD (Human-in-the-loop Unlock)
 // =========================================================================
-app.post('/queue/approve/:id', requireAuth0JWT, async (req, res, next) => {
+app.post('/queue/approve/:id', requireAuth0JWT, requirePermission('approve:requests'), async (req, res, next) => {
     try {
         const { id } = req.params;
         const suspendedRequest = queueManager.approve(id);
@@ -100,25 +101,7 @@ app.post('/queue/approve/:id', requireAuth0JWT, async (req, res, next) => {
         logSOC('SUCCESS', 'APPROVER', `Live Auth0 HUMAN-VERIFICATION AUTHENTICATED securely for Process ${id}!`);
 
         // Mandatory live Auth0 Token Vault execution linkage ping
-        let vaultToken = 'unauthorized_fallback_lock';
-        logSOC('INFO', 'AUTH0_VAULT', `Reaching out dynamically to live authorization tenant network: ${process.env.AUTH0_DOMAIN}`);
-        
-        if (!process.env.AUTH0_DOMAIN || !process.env.AUTH0_CLIENT_ID || !process.env.AUTH0_CLIENT_SECRET) {
-             logSOC('ERROR', 'AUTH0_VAULT', 'Missing critical Auth0 environment variables!');
-        } else {
-            try {
-                const authResponse = await axios.post(`https://${process.env.AUTH0_DOMAIN}/oauth/token`, {
-                    client_id: process.env.AUTH0_CLIENT_ID,
-                    client_secret: process.env.AUTH0_CLIENT_SECRET,
-                    audience: `https://${process.env.AUTH0_DOMAIN}/api/v2/`,
-                    grant_type: "client_credentials"
-                }, { timeout: 5000 });
-                vaultToken = authResponse.data.access_token;
-                logSOC('SUCCESS', 'AUTH0_VAULT', `Acquired vault token from Auth0 successfully.`);
-            } catch (error) {
-                logSOC('ERROR', 'AUTH0_VAULT', `Failed to acquire vault token:`, { error: error.response?.data || error.message });
-            }
-        }
+        const vaultToken = await getVaultToken();
 
         logSOC('INFO', 'AEGIS_ENCLAVE', `Natively discharging locked execution loop seamlessly back to core orchestrators.`);
         
@@ -140,7 +123,7 @@ app.post('/queue/approve/:id', requireAuth0JWT, async (req, res, next) => {
 // =========================================================================
 // ROUTE 3: THE DENIAL SWITCHBOARD (Reject Execution)
 // =========================================================================
-app.post('/queue/deny/:id', requireAuth0JWT, (req, res, next) => {
+app.post('/queue/deny/:id', requireAuth0JWT, requirePermission('deny:requests'), (req, res, next) => {
     try {
         const { id } = req.params;
         const suspendedRequest = queueManager.deny(id);
@@ -170,7 +153,7 @@ app.post('/queue/deny/:id', requireAuth0JWT, (req, res, next) => {
 // =========================================================================
 // INTERNAL INFRASTRUCTURE SOC DASHBOARD REPORTING ROUTE
 // =========================================================================
-app.get('/queue', (req, res) => {
+app.get('/queue', requireAuth0JWT, requirePermission('view:queue'), (req, res) => {
     res.json(queueManager.getAll());
 });
 
