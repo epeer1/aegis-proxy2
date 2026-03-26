@@ -7,6 +7,8 @@ import { ToastNotification } from "@/components/soc/ToastNotification";
 import { SOCHeader } from "@/components/soc/SOCHeader";
 import { AgentSimulator } from "@/components/soc/AgentSimulator";
 import { ForensicCard } from "@/components/soc/ForensicCard";
+import { ConfirmModal } from "@/components/soc/ConfirmModal";
+import { AuditLog } from "@/components/soc/AuditLog";
 
 export default function AegisDashboard() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -17,13 +19,20 @@ export default function AegisDashboard() {
   const [isApproving, setIsApproving] = useState<string | null>(null);
   const [isDenying, setIsDenying] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [modalState, setModalState] = useState<{ isOpen: boolean; action: "approve" | "deny"; requestId: string } | null>(null);
 
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
 
-  const confirmAction = async (id: string, action: "approve" | "deny") => {
+  const openConfirmModal = (id: string, action: "approve" | "deny") => {
+    setModalState({ isOpen: true, action, requestId: id });
+  };
+
+  const closeModal = () => setModalState(null);
+
+  const executeAction = async (id: string, action: "approve" | "deny") => {
     if (action === "approve") setIsApproving(id);
     else setIsDenying(id);
 
@@ -38,7 +47,12 @@ export default function AegisDashboard() {
       const data = await res.json();
 
       if (res.ok) {
-         showToast(`${action === "approve" ? "Approved" : "Denied"} payload ${id.substring(0,8)}...`, "success");
+         showToast(
+           action === "approve" 
+             ? `Authorized — Token Vault delegation issued for ${id.substring(0,8)}...` 
+             : `Denied — Execution blocked for ${id.substring(0,8)}...`, 
+           "success"
+         );
          setQueue(q => q.filter(r => r.id !== id));
       } else {
          throw new Error(data.error || "Gateway rejected the operation.");
@@ -48,12 +62,33 @@ export default function AegisDashboard() {
     } finally {
       if (action === "approve") setIsApproving(null);
       else setIsDenying(null);
+      closeModal();
     }
   };
+
+  const handleConfirmFromModal = () => {
+    if (modalState) {
+      executeAction(modalState.requestId, modalState.action);
+    }
+  };
+
+  const modalRequest = modalState ? queue.find(r => r.id === modalState.requestId) : null;
 
   return (
     <div className="min-h-screen bg-[#050505] text-neutral-300 font-mono flex flex-col selection:bg-red-900 selection:text-white">
       <ToastNotification toast={toast} />
+
+      {/* Confirmation Modal */}
+      {modalState && modalRequest && (
+        <ConfirmModal
+          isOpen={modalState.isOpen}
+          action={modalState.action}
+          request={modalRequest}
+          isLoading={isApproving === modalState.requestId || isDenying === modalState.requestId}
+          onConfirm={handleConfirmFromModal}
+          onCancel={closeModal}
+        />
+      )}
 
       <SOCHeader 
         queueLength={queue.length} 
@@ -65,6 +100,7 @@ export default function AegisDashboard() {
       <main className="flex-1 p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 bg-[url('/cubes.png')] bg-fixed overflow-y-auto">
         <div className="lg:col-span-4 space-y-6">
           <AgentSimulator apiUrl={apiUrl} showToast={showToast} />
+          <AuditLog />
         </div>
 
         <div className="lg:col-span-8 flex flex-col gap-6">
@@ -85,7 +121,7 @@ export default function AegisDashboard() {
                  total={queue.length} 
                  isApproving={isApproving} 
                  isDenying={isDenying} 
-                 onConfirm={confirmAction} 
+                 onConfirm={openConfirmModal} 
                />
              ))
           ) : (
@@ -98,9 +134,9 @@ export default function AegisDashboard() {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold tracking-widest uppercase text-emerald-400 mb-2">{loading ? 'Scanning...' : 'Systems Secure'}</h2>
+                  <h2 className="text-xl font-bold tracking-widest uppercase text-emerald-400 mb-2">{loading ? 'Scanning...' : 'All Clear — No Active Threats'}</h2>
                   <p className="text-sm text-emerald-500/60 leading-relaxed font-sans">
-                    Zero-Trust Policy Engine active. Incoming AI payload traffic is being processed dynamically. Awaiting intercept.
+                    Zero-Trust Policy Engine active. All incoming AI agent traffic is being monitored. No suspicious payloads detected.
                   </p>
                 </div>
               </div>

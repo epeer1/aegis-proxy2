@@ -12,14 +12,8 @@ interface ForensicCardProps {
 }
 
 export function ForensicCard({ request, index, total, isApproving, isDenying, onConfirm }: ForensicCardProps) {
-  const confirmActionWithDialog = (id: string, action: "approve" | "deny") => {
-    if (window.confirm(`Are you sure you want to ${action.toUpperCase()} this request via Auth0?`)) {
-      onConfirm(id, action);
-    }
-  };
-
   return (
-    <Card className="border border-red-900/50 bg-[#0a0000] text-white rounded-xl overflow-hidden shadow-[0_0_40px_rgba(153,27,27,0.15)] animate-in fade-in slide-in-from-bottom-4 duration-500 relative flex flex-col">
+    <Card className="border border-red-900/50 bg-[#0a0000] text-white rounded-xl overflow-hidden shadow-[0_0_40px_rgba(153,27,27,0.15)] animate-in fade-in slide-in-from-bottom-4 duration-500 relative flex flex-col aegis-threat-pulse">
       <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
       <div className="bg-red-950/40 text-red-500 text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -108,14 +102,14 @@ export function ForensicCard({ request, index, total, isApproving, isDenying, on
         <div className="flex gap-3 w-full sm:w-auto">
           <Button 
             variant="ghost" 
-            onClick={() => confirmActionWithDialog(request.id, "deny")}
+            onClick={() => onConfirm(request.id, "deny")}
             disabled={isDenying === request.id || isApproving === request.id}
             className="flex-1 sm:flex-none border border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-800 hover:border-neutral-700 text-xs tracking-widest uppercase h-12 rounded px-8 transition-all font-sans"
           >
             {isDenying === request.id ? 'Rejecting...' : 'Reject Drop'}
           </Button>
           <Button 
-            onClick={() => confirmActionWithDialog(request.id, "approve")}
+            onClick={() => onConfirm(request.id, "approve")}
             disabled={isApproving === request.id || isDenying === request.id}
             className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white border-0 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] text-xs font-bold tracking-widest uppercase h-12 rounded px-8 transition-all font-sans"
           >

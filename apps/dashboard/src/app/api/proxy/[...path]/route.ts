@@ -6,9 +6,22 @@ async function proxyRequest(req: Request, path: string[], method: string) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
   try {
-    // DEV BYPASS: Force local_dev_secret for manual testing.
-    // TODO: Remove this and restore auth0.getSession() for production.
-    const token = "local_dev_secret";
+    // Get Auth0 session token, fall back to dev secret in development
+    let token: string | null = null;
+    try {
+      const session = await auth0.getSession();
+      token = session?.tokenSet?.accessToken ?? null;
+    } catch (e) {
+      // Auth0 session not available
+    }
+
+    if (!token && process.env.NODE_ENV !== 'production') {
+      token = process.env.ADMIN_SECRET || 'local_dev_secret';
+    }
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const options: RequestInit = {
       method,

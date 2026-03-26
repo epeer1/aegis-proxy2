@@ -1,8 +1,10 @@
 const crypto = require('crypto');
+const { EventEmitter } = require('events');
 const { logSOC } = require('./logger');
 
-class QueueManager {
+class QueueManager extends EventEmitter {
     constructor() {
+        super();
         this.queue = [];
         this.MAX_QUEUE_SIZE = 100;
         this.TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -28,6 +30,7 @@ class QueueManager {
         };
 
         this.queue.push(pendingRequest);
+        this.emit('request:added', { id, payload, classification, timestamp: pendingRequest.timestamp });
         return id;
     }
 
@@ -55,6 +58,7 @@ class QueueManager {
         
         const req = this.queue[index];
         this.queue.splice(index, 1);
+        this.emit('request:approved', { id });
         return req;
     }
 
@@ -64,6 +68,7 @@ class QueueManager {
         
         const req = this.queue[index];
         this.queue.splice(index, 1);
+        this.emit('request:denied', { id });
         return req;
     }
 

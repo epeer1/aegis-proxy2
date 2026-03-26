@@ -22,7 +22,7 @@ Aegis is a security gateway that intercepts outgoing requests from autonomous AI
 
 ```
 ┌──────────────┐        ┌─────────────────────────┐        ┌───────────────────┐
-│   AI Agent   │──POST──▶  apps/proxy (Node.js)   │◀─poll──│  apps/dashboard   │
+│   AI Agent   │──POST──▶  apps/proxy (Node.js)   │◀──SSE──│  apps/dashboard   │
 │  (Python/JS) │        │  :3001                   │        │  (Next.js) :3000  │
 └──────────────┘        │                          │        └───────────────────┘
                         │  ┌────────────────────┐  │                  │
@@ -48,11 +48,12 @@ Aegis is a security gateway that intercepts outgoing requests from autonomous AI
 aegis-monorepo/
 ├── apps/
 │   ├── proxy/                    # Node.js backend gateway
-│   │   ├── server.js             # Express app, 5 routes, graceful shutdown
+│   │   ├── server.js             # Express app, routes, SSE, graceful shutdown
 │   │   ├── policyEngine.js       # LLM classification + keyword fallback
-│   │   ├── queueManager.js       # In-memory queue with TTL cleanup
+│   │   ├── queueManager.js       # In-memory queue with TTL + EventEmitter (SSE)
 │   │   ├── authMiddleware.js     # Auth0 JWT verification + RBAC
 │   │   ├── tokenCache.js         # M2M token caching with TTL
+│   │   ├── auditLog.js           # Persistent JSONL audit trail for decisions
 │   │   ├── logger.js             # Pino structured logging (pretty in dev, JSON in prod)
 │   │   └── tests/                # Jest test suite (14 tests)
 │   │       ├── policy_engine.test.js
@@ -62,9 +63,9 @@ aegis-monorepo/
 │           ├── app/
 │           │   ├── page.tsx              # Main dashboard (modular component composition)
 │           │   ├── layout.tsx            # Root layout with Auth0 provider
-│           │   └── api/proxy/[...path]/  # Server-side API proxy to backend
-│           ├── components/soc/           # ForensicCard, SOCHeader, AgentSimulator, Toast
-│           ├── hooks/                    # useQueuePolling, useAuthProfile
+│           │   └── api/proxy/             # Server-side API proxy to backend + SSE stream
+│           ├── components/soc/           # ForensicCard, SOCHeader, AgentSimulator, ConfirmModal, AuditLog, Toast
+│           ├── hooks/                    # useQueuePolling (SSE + fallback), useAuthProfile
 │           └── lib/                      # Auth0 client, utilities
 ├── scripts/
 │   ├── simulator/                # Python agent simulator
@@ -98,8 +99,11 @@ aegis-monorepo/
 |--------|------|------|-------------|
 | `POST` | `/proxy/execute` | None (rate-limited) | Main gateway. Accepts agent payloads, classifies intent, allows or suspends |
 | `GET` | `/queue` | JWT + `view:queue` | Returns all pending requests for the SOC dashboard |
+| `GET` | `/queue/events` | JWT + `view:queue` | SSE stream — real-time push on queue add/approve/deny |
 | `POST` | `/queue/approve/:id` | JWT + `approve:requests` | Approves a suspended request, acquires M2M vault token |
 | `POST` | `/queue/deny/:id` | JWT + `deny:requests` | Denies a suspended request, returns 403 to the agent |
+| `POST` | `/external/execute` | JWT (vault token) | Mock protected API — proves the agent *uses* the vault token |
+| `GET` | `/audit` | JWT + `view:queue` | Returns last 50 approve/deny decisions from persistent audit log |
 | `GET` | `/health` | None | Health check with uptime and queue size |
 
 **Rate limiting**: `/proxy/execute` is limited to 100 requests per IP per minute.
@@ -180,7 +184,7 @@ cp apps/proxy/.env.example apps/proxy/.env
 # Fill in AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET, and optionally OPENAI_API_KEY
 
 # Frontend
-cp apps/dashboard/.env.local.example apps/dashboard/.env.local
+cp apps/dashboard/.env.example apps/dashboard/.env.local
 # Fill in AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET, AUTH0_SECRET, APP_BASE_URL
 ```
 
@@ -210,6 +214,8 @@ python3 autonomous_client.py
 The simulator sends two payloads:
 - `get_weather` → classified SAFE, allowed instantly
 - `delete_database` → classified DESTRUCTIVE, suspended until you approve/deny on the dashboard
+
+On approval, the simulator automatically calls `/external/execute` with the vault token to demonstrate the **complete Token Vault loop** — the agent receives the token *and uses it* to execute the authorized action.
 
 ### Alternative: Docker Compose
 
@@ -285,9 +291,7 @@ Runs 14 tests across two suites:
 ## Known Limitations
 
 - **In-memory queue**: Pending requests are stored in RAM. If the backend restarts, all suspended requests are lost. A persistent store (Redis, PostgreSQL) would be needed for production.
-- **HTTP long-polling**: The dashboard polls `/queue` every 1.5 seconds. WebSockets or SSE would provide real-time updates with lower overhead.
 - **Single-process**: The backend runs as a single Node.js process. Horizontal scaling would require shared state for the queue.
-- **No audit log**: Approve/deny actions are logged to stdout but not persisted to a database for compliance.
 
 ---
 

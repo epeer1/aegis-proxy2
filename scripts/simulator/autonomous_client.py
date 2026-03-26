@@ -4,6 +4,7 @@ import requests
 import sys
 
 PROXY_URL = "http://localhost:3001/proxy/execute"
+EXTERNAL_API_URL = "http://localhost:3001/external/execute"
 
 def run_agent_simulation():
     print("🤖 [Autonomous AI Agent] Initializing local tasks...")
@@ -44,7 +45,26 @@ def run_agent_simulation():
         
         if response.status_code == 200:
             print("\n🚨 [AI Agent] ACTION APPROVED via Auth0 step-up!")
-            print(f"Vault Delegation Token Received: {response.json().get('auth0_vault_delegation')}")
+            vault_token = response.json().get('auth0_vault_delegation')
+            print(f"Vault Delegation Token Received: {vault_token[:20]}..." if vault_token and len(vault_token) > 20 else f"Vault Delegation Token Received: {vault_token}")
+            
+            # Close the Token Vault loop — use the token to call the protected external API
+            print("\n[AI Agent] Executing authorized action via External API with vault token...")
+            try:
+                ext_response = requests.post(
+                    EXTERNAL_API_URL,
+                    json=destructive_payload,
+                    headers={"Authorization": f"Bearer {vault_token}", "Content-Type": "application/json"},
+                    timeout=10
+                )
+                if ext_response.status_code == 200:
+                    result = ext_response.json()
+                    print(f"✅ Action executed successfully: {result.get('message')}")
+                    print(f"   Executed at: {result.get('executedAt')}")
+                else:
+                    print(f"❌ External API rejected: {ext_response.status_code} - {ext_response.text}")
+            except Exception as e:
+                print(f"❌ External API call failed: {e}")
         elif response.status_code == 403:
             print("\n❌ [AI Agent] ACTION REJECTED by human SOC analyst.")
         elif response.status_code == 503:

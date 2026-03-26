@@ -9,6 +9,7 @@ const { requireAuth0JWT, requirePermission } = require('./authMiddleware');
 const rateLimit = require('express-rate-limit');
 const { z } = require('zod');
 const { getVaultToken } = require('./tokenCache');
+const { recordDecision, getRecentDecisions } = require('./auditLog');
 
 const app = express();
 
@@ -103,7 +104,16 @@ app.post('/queue/approve/:id', requireAuth0JWT, requirePermission('approve:reque
         // Mandatory live Auth0 Token Vault execution linkage ping
         const vaultToken = await getVaultToken();
 
-        logSOC('INFO', 'AEGIS_ENCLAVE', `Natively discharging locked execution loop seamlessly back to core orchestrators.`);
+        logSOC('INFO', 'AEGIS_ENCLAVE', `Discharging locked execution loop back to agent.`);
+        
+        // Record audit trail
+        recordDecision({
+            requestId: id,
+            action: suspendedRequest.payload?.action,
+            decision: 'approved',
+            analyst: req.user?.sub || 'admin',
+            classification: suspendedRequest.classification,
+        });
         
         if (!suspendedRequest.resolver.headersSent) {
             suspendedRequest.resolver.status(200).json({
@@ -134,7 +144,16 @@ app.post('/queue/deny/:id', requireAuth0JWT, requirePermission('deny:requests'),
         }
 
         logSOC('WARN', 'APPROVER', `Live SOC Authorization EXPLICITLY DENIED for Process ${id}!`);
-        logSOC('INFO', 'AEGIS_ENCLAVE', `Terminating and dropping suspended request from execution loop.`);
+        logSOC('INFO', 'AEGIS_ENCLAVE', `Terminating suspended request from execution loop.`);
+        
+        // Record audit trail
+        recordDecision({
+            requestId: id,
+            action: suspendedRequest.payload?.action,
+            decision: 'denied',
+            analyst: req.user?.sub || 'admin',
+            classification: suspendedRequest.classification,
+        });
         
         if (!suspendedRequest.resolver.headersSent) {
             suspendedRequest.resolver.status(403).json({
@@ -148,6 +167,68 @@ app.post('/queue/deny/:id', requireAuth0JWT, requirePermission('deny:requests'),
     } catch (err) {
         next(err);
     }
+});
+
+// =========================================================================
+// SSE REAL-TIME QUEUE EVENTS
+// =========================================================================
+const sseClients = new Set();
+
+app.get('/queue/events', requireAuth0JWT, requirePermission('view:queue'), (req, res) => {
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+    });
+
+    // Send initial heartbeat
+    res.write('event: connected\ndata: {}\n\n');
+
+    sseClients.add(res);
+    logSOC('INFO', 'SSE', `Client connected. Active SSE clients: ${sseClients.size}`);
+
+    // Heartbeat every 15 seconds
+    const heartbeat = setInterval(() => {
+        res.write('event: heartbeat\ndata: {}\n\n');
+    }, 15000);
+
+    req.on('close', () => {
+        clearInterval(heartbeat);
+        sseClients.delete(res);
+        logSOC('INFO', 'SSE', `Client disconnected. Active SSE clients: ${sseClients.size}`);
+    });
+});
+
+function broadcastSSE(event, data) {
+    const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+    for (const client of sseClients) {
+        client.write(message);
+    }
+}
+
+queueManager.on('request:added', (data) => broadcastSSE('request:added', data));
+queueManager.on('request:approved', (data) => broadcastSSE('request:approved', data));
+queueManager.on('request:denied', (data) => broadcastSSE('request:denied', data));
+
+// =========================================================================
+// MOCK EXTERNAL PROTECTED API (Token Vault loop closure)
+// =========================================================================
+app.post('/external/execute', requireAuth0JWT, (req, res) => {
+    logSOC('SUCCESS', 'EXTERNAL_API', `Authorized action executed with valid vault token.`);
+    res.json({
+        status: 'executed',
+        message: 'Action authorized and executed via Auth0 Token Vault delegation.',
+        executedAt: new Date().toISOString(),
+        payload: req.body || {},
+    });
+});
+
+// =========================================================================
+// AUDIT TRAIL ENDPOINT
+// =========================================================================
+app.get('/audit', requireAuth0JWT, requirePermission('view:queue'), (req, res) => {
+    const decisions = getRecentDecisions(50);
+    res.json(decisions);
 });
 
 // =========================================================================
@@ -208,8 +289,7 @@ let serverInstance = null;
 if (require.main === module) {
     const PORT = process.env.PORT || 3001;
     serverInstance = app.listen(PORT, () => {
-        logSOC('SUCCESS', 'SYSTEM', `Aegis Zero-Trust Intelligent SOC Gateway Engine definitively running on http://localhost:${PORT}`);
-        logSOC('INFO', 'SYSTEM', `Continually scanning inbound agent network infrastructure ports cleanly globally...`);
+        logSOC('SUCCESS', 'SYSTEM', `Aegis Proxy gateway listening on http://localhost:${PORT}`);
     });
 } else {
     module.exports = { app, PolicyEngine, queueManager, serverInstance };

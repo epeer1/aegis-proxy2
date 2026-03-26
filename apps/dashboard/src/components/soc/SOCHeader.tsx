@@ -40,6 +40,7 @@ export function SOCHeader({ queueLength, user, isAuthenticated, apiUrl }: SOCHea
             <span className="text-white font-semibold flex items-center gap-2">
                 <img src={user.picture} alt={user.name} className="w-4 h-4 rounded-full border border-neutral-700" />
                 {user.email || user.name}
+                <a href="/auth/logout" className="ml-2 text-[9px] text-neutral-500 hover:text-red-400 uppercase tracking-widest transition-colors">Sign Out</a>
             </span>
           </div>
         )}

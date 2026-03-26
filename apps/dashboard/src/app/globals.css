@@ -127,3 +127,14 @@
     @apply font-sans;
   }
 }
+
+/* Threat arrival pulse animation */
+@keyframes threat-pulse {
+  0% { box-shadow: 0 0 40px rgba(153, 27, 27, 0.15); }
+  50% { box-shadow: 0 0 60px rgba(220, 38, 38, 0.35), 0 0 100px rgba(220, 38, 38, 0.1); }
+  100% { box-shadow: 0 0 40px rgba(153, 27, 27, 0.15); }
+}
+
+.aegis-threat-pulse {
+  animation: threat-pulse 2s ease-in-out 1;
+}
