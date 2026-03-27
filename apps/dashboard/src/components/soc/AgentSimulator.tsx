@@ -38,7 +38,7 @@ export function AgentSimulator({ apiUrl, showToast }: AgentSimulatorProps) {
   };
 
   return (
-    <Card className="border border-neutral-800 bg-black/80 backdrop-blur-xl rounded-xl overflow-hidden shadow-2xl sticky top-24">
+    <Card className="border border-neutral-800 bg-black/80 backdrop-blur-xl rounded-xl overflow-hidden shadow-2xl">
       <CardHeader className="border-b border-neutral-800/50 bg-neutral-900/20 py-4">
         <CardTitle className="text-sm text-neutral-300 uppercase tracking-widest flex items-center justify-between">
           <span>Agent Simulator</span>

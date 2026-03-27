@@ -1,0 +1,41 @@
+Push the boundaries of what AI agents can do and become.
+
+As we know, OpenClaw is taking the AI world by storm with sovereign AI that runs locally, and even on browsers and phones. We’re seeing the supply for MacMini’s drying up, since users don’t really want to expose their real machines. What if I told you, now you can more securely keep OpenClaw in restricted mode and let it communicate with your apps in the outside world through an intermediary agent you build?
+
+Auth0 for AI Agents provides the identity layer that lets your agents authenticate, authorize, and interact with APIs and services the way humans do.
+
+For the Authorized to Act Hackathon, build anything – the only requirement is to build with Token Vault from Auth0 for AI Agents. Let Auth0 handle the OAuth flows, token management, and consent delegation so you can stay focused. Need async auth or step-up authentication? Leave that to Auth0 for AI Agents as well.
+
+What will you create? A deeper integration into your users' digital lives that keeps them in control? A continuous agent that spans sub-agents like you’ve got tokens to burn?
+
+Dive in and build the future!
+
+Why Join This Hackathon?
+Innovate: Push the boundaries of generative AI and leverage Auth0 for AI Agents
+
+Compete: with a prize pool of $10,000 in cash and lots of prizes, you can win monetarily and experientially.
+
+Enrich Your Skills: access the dedicated resources, examples, and docs you need to succeed on your mission.
+
+Network: Make friends, get recognition, and enhance your portfolio.
+
+Requirements
+In order to win, all teams must use the Token Vault feature of Auth0 for AI Agents.
+
+When submitting, be sure to include the following:
+
+Include a text description that should explain the features and functionality of your Project.
+Include a demonstration video of your Project. The video portion of the Submission:
+should be around three (3) minutes. Judges are not required to watch beyond three minutes 
+should include footage that shows the Project functioning on the device for which it was built
+must be uploaded to and made publicly visible on YouTube, Vimeo, Facebook Video, or Youku, and a link to the video must be provided on the submission form on the Hackathon Website; and
+must not include third party trademarks, or copyrighted music or other material unless the Entrant has permission to use such material.
+Include a public URL to your code repository for judging and testing. The repository should contain all necessary source code, assets, and instructions required for the project to be functional.
+Include a published link to project or application
+An APK for Android apps 
+For dev tools, browser extensions, etc; please specify in the submission form why you do not have a published link.
+Optionally, complete a Bonus Blog Post Submission:
+
+To be considered for the Bonus Blog Post Prizes, participants must have written a blog post of 250 words or more in the Text Description of your Project Submission. Your blog post should cover Token Vault related achievement and be materially different than your text description. Be sure to add a header or callout so the judges see your blog post in the text description. 
+Bonus Blog Post Judging Criteria: 
+A panel of Judges will review all eligible Bonus Blog Post Submissions and apply the following Judging Criteria: quality, relevance to the Auth0 community, and completeness of the content.
