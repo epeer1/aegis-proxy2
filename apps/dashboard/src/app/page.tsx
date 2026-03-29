@@ -14,7 +14,7 @@ export default function MidosocDashboard() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
   
   const { queue, setQueue, error, loading } = useQueuePolling(apiUrl);
-  const { user, isAuthenticated, ensureLoggedIn } = useAuthProfile();
+  const { user, isAuthenticated, ensureLoggedIn, authLoading } = useAuthProfile();
 
   const [isApproving, setIsApproving] = useState<string | null>(null);
   const [isDenying, setIsDenying] = useState<string | null>(null);
@@ -75,8 +75,36 @@ export default function MidosocDashboard() {
   const modalRequest = modalState ? queue.find(r => r.id === modalState.requestId) : null;
 
   return (
-    <div className="min-h-screen bg-[#050505] text-neutral-300 font-mono flex flex-col selection:bg-red-900 selection:text-white">
+    <div className={`min-h-screen bg-[#050505] text-neutral-300 font-mono flex flex-col selection:bg-red-900 selection:text-white ${!isAuthenticated ? 'overflow-hidden max-h-screen' : ''}`}>
       <ToastNotification toast={toast} />
+
+      {/* Auth0 Login Overlay */}
+      {!isAuthenticated && !authLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/70">
+          <div className="relative border border-neutral-800 bg-black/90 rounded-2xl p-10 max-w-md w-full mx-4 shadow-[0_0_80px_rgba(16,185,129,0.08)] text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-950/40 border border-emerald-500/30 mb-6">
+              <svg className="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold tracking-[0.15em] text-white uppercase mb-2">MIDOSOC</h1>
+            <p className="text-[10px] text-neutral-500 uppercase tracking-[0.3em] mb-6">Zero-Trust AI Agent Command Center</p>
+            <p className="text-sm text-neutral-400 font-sans mb-8 leading-relaxed">
+              Authenticate via Auth0 to access the SOC dashboard. Only authorized analysts may review and authorize AI agent actions.
+            </p>
+            <a
+              href="/auth/login"
+              className="inline-flex items-center justify-center gap-2 w-full px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm tracking-wide transition-all duration-200 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+              </svg>
+              Sign In with Auth0
+            </a>
+            <p className="text-[9px] text-neutral-600 mt-4 uppercase tracking-widest">Powered by Auth0 Token Vault</p>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Modal */}
       {modalState && modalRequest && (

@@ -6,23 +6,17 @@ async function proxyRequest(req: Request, path: string[], method: string) {
   const apiUrl = process.env.PROXY_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
   try {
-    // Use ADMIN_SECRET when auth is skipped or in development
-    // In production with auth enabled, use the Auth0 access token from the session
-    let token: string | null = null;
+    // Dashboard→Proxy is always M2M via ADMIN_SECRET
+    // Auth0 session is used to identify the analyst, not to auth with the backend
+    const token = process.env.ADMIN_SECRET || 'local_dev_secret';
 
-    if (process.env.SKIP_AUTH === 'true' || process.env.NODE_ENV !== 'production') {
-      token = process.env.ADMIN_SECRET || 'local_dev_secret';
-    } else {
+    // Get the authenticated user's identity for audit trail
+    let analyst: string | undefined;
+    if (process.env.SKIP_AUTH !== 'true') {
       try {
         const session = await auth0.getSession();
-        token = session?.tokenSet?.accessToken ?? null;
-      } catch (e) {
-        // Auth0 session not available
-      }
-    }
-
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        analyst = session?.user?.email || session?.user?.name || session?.user?.sub;
+      } catch (e) {}
     }
 
     const options: RequestInit = {
@@ -34,10 +28,12 @@ async function proxyRequest(req: Request, path: string[], method: string) {
     };
 
     if (method !== 'GET' && method !== 'HEAD') {
+      let body: any = {};
       try {
-        const body = await req.json();
-        options.body = JSON.stringify(body);
+        body = await req.json();
       } catch(e) {}
+      if (analyst) body.analyst = analyst;
+      options.body = JSON.stringify(body);
     }
 
     const response = await fetch(`${apiUrl}/${targetPath}`, options);

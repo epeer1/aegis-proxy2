@@ -24,7 +24,9 @@ export function useAuthProfile() {
   };
 
   useEffect(() => {
-    if (!SKIP_AUTH) checkAuth();
+    if (!SKIP_AUTH) {
+      checkAuth();
+    }
   }, []);
 
   const ensureLoggedIn = async (): Promise<boolean> => {

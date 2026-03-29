@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { auth0 } from "./lib/auth0";
 
-export default async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   if (process.env.SKIP_AUTH === 'true') {
     return NextResponse.next();
   }

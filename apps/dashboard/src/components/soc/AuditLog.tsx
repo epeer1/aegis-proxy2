@@ -73,6 +73,9 @@ export function AuditLog() {
                   <span className="text-[10px] text-neutral-400 font-mono truncate">{entry.action}</span>
                 </div>
                 <span className="text-[9px] text-neutral-600 font-mono">{entry.requestId?.substring(0, 8)}...</span>
+                {entry.analyst && entry.analyst !== 'admin' && (
+                  <span className="text-[9px] text-emerald-600 font-mono">{entry.analyst}</span>
+                )}
               </div>
               <span className="text-[9px] text-neutral-600 whitespace-nowrap">
                 {new Date(entry.timestamp).toLocaleTimeString("en-US", { hour12: false, hour: '2-digit', minute: '2-digit' })}

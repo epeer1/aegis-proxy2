@@ -112,7 +112,7 @@ app.post('/queue/approve/:id', requireAuth0JWT, requirePermission('approve:reque
             requestId: id,
             action: suspendedRequest.payload?.action,
             decision: 'approved',
-            analyst: req.user?.sub || 'admin',
+            analyst: req.body?.analyst || req.user?.sub || 'admin',
             classification: suspendedRequest.classification,
         });
         
@@ -152,7 +152,7 @@ app.post('/queue/deny/:id', requireAuth0JWT, requirePermission('deny:requests'),
             requestId: id,
             action: suspendedRequest.payload?.action,
             decision: 'denied',
-            analyst: req.user?.sub || 'admin',
+            analyst: req.body?.analyst || req.user?.sub || 'admin',
             classification: suspendedRequest.classification,
         });
         
