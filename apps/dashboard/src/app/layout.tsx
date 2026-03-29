@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aegis SOC Command Center",
+  title: "Midosoc Command Center",
   description: "Zero-Trust Authorization Proxy Dashboard",
 };
 

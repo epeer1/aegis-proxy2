@@ -36,7 +36,7 @@ async function fireRequest(id, isSafe) {
 }
 
 async function runLoadTest() {
-  console.log('🚀 Firing 10 parallel requests to Aegis Proxy (5 SAFE, 5 DESTRUCTIVE) simultaneously...');
+  console.log('🚀 Firing 10 parallel requests to Midosoc (5 SAFE, 5 DESTRUCTIVE) simultaneously...');
   console.log('-------------------------------------------------------------------------------------');
   
   const requests = [];

@@ -13,7 +13,7 @@ interface ForensicCardProps {
 
 export function ForensicCard({ request, index, total, isApproving, isDenying, onConfirm }: ForensicCardProps) {
   return (
-    <Card className="border border-red-900/50 bg-[#0a0000] text-white rounded-xl overflow-hidden shadow-[0_0_40px_rgba(153,27,27,0.15)] animate-in fade-in slide-in-from-bottom-4 duration-500 relative flex flex-col aegis-threat-pulse">
+    <Card className="border border-red-900/50 bg-[#0a0000] text-white rounded-xl overflow-hidden shadow-[0_0_40px_rgba(153,27,27,0.15)] animate-in fade-in slide-in-from-bottom-4 duration-500 relative flex flex-col midosoc-threat-pulse">
       <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
       <div className="bg-red-950/40 text-red-500 text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-2">

@@ -1,7 +1,7 @@
-# Aegis Proxy Hub
+# Midosoc Hub
 
 **Goal Description:** 
-Build "The Aegis Proxy", a visual security middlebox that intercepts untrusted local AI requests and pauses sensitive actions for strict human Step-Up Authentication explicitly using the Auth0 For AI Agents Token Vault. We are fiercely optimizing for a 19-day deadline and the mandated 3-minute video demo.
+Build "The Midosoc", a visual security middlebox that intercepts untrusted local AI requests and pauses sensitive actions for strict human Step-Up Authentication explicitly using the Auth0 For AI Agents Token Vault. We are fiercely optimizing for a 19-day deadline and the mandated 3-minute video demo.
 
 ## User Review Required
 > [!IMPORTANT]
@@ -17,7 +17,7 @@ Build "The Aegis Proxy", a visual security middlebox that intercepts untrusted l
 
 ### 1. The Proxy Architecture (Backend)
 The core interception engine running locally on Node.js.
-#### [NEW] [server.js](file:///Users/einav/Repos/PromptWorkflow/aegis-proxy/server.js)
+#### [NEW] [server.js](file:///Users/einav/Repos/PromptWorkflow/midosoc/server.js)
 - Express server running on port `3001`.
 - In-memory `REQUEST_QUEUE` array.
 - `POST /proxy/safe` endpoint (auto-approves instantly).
@@ -25,13 +25,13 @@ The core interception engine running locally on Node.js.
 
 ### 2. The Identity Layer (Auth0 Integration)
 The heavy-lifting bridging the proxy to the user.
-#### [NEW] [auth.js](file:///Users/einav/Repos/PromptWorkflow/aegis-proxy/auth.js)
+#### [NEW] [auth.js](file:///Users/einav/Repos/PromptWorkflow/midosoc/auth.js)
 - Integrates strictly with the Auth0 SDK.
 - Handles OAuth token retrieval and triggers the Step-Up mechanisms.
 
 ### 3. The Visual Dashboard (Frontend)
 The sleek Next.js UI that the judges will physically watch in the demo.
-#### [NEW] [page.tsx](file:///Users/einav/Repos/PromptWorkflow/aegis-dashboard/app/page.tsx)
+#### [NEW] [page.tsx](file:///Users/einav/Repos/PromptWorkflow/midosoc-dashboard/app/page.tsx)
 - Automatically polls `localhost:3001/queue` every 1,000ms.
 - Visually renders pending sensitive requests with aggressive red styling.
 - Renders the physical "Approve Request via Auth0 Token Vault" button to release the token.

@@ -1,7 +1,7 @@
 const request = require('supertest');
 const { app, queueManager } = require('../server');
 
-describe('Aegis Proxy Integrated Routes', () => {
+describe('Midosoc Integrated Routes', () => {
 
     beforeEach(() => {
         // Clear queue before each test

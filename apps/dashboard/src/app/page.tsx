@@ -10,7 +10,7 @@ import { ForensicCard } from "@/components/soc/ForensicCard";
 import { ConfirmModal } from "@/components/soc/ConfirmModal";
 import { AuditLog } from "@/components/soc/AuditLog";
 
-export default function AegisDashboard() {
+export default function MidosocDashboard() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
   
   const { queue, setQueue, error, loading } = useQueuePolling(apiUrl);
@@ -109,7 +109,7 @@ export default function AegisDashboard() {
               <div className="text-center space-y-4">
                 <svg className="w-12 h-12 mx-auto text-red-500 opacity-50 block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 <h2 className="text-xl font-bold tracking-widest uppercase text-red-500">{error}</h2>
-                <p className="text-red-400/60 font-sans">Are you sure the Aegis Proxy backend is running on {apiUrl}?</p>
+                <p className="text-red-400/60 font-sans">Are you sure the Midosoc backend is running on {apiUrl}?</p>
               </div>
             </Card>
           ) : queue.length > 0 ? (

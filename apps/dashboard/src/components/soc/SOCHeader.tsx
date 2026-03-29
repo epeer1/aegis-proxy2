@@ -29,7 +29,7 @@ export function SOCHeader({ queueLength, user, isAuthenticated, apiUrl }: SOCHea
           <span className={`relative inline-flex rounded-full h-3 w-3 ${queueLength > 0 ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]' : 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]'}`}></span>
         </div>
         <div>
-          <h1 className="text-sm font-bold tracking-[0.2em] text-white uppercase">AEGIS SOC Command Center</h1>
+          <h1 className="text-sm font-bold tracking-[0.2em] text-white uppercase">MIDOSOC Command Center</h1>
           <p className="text-[10px] text-neutral-500 uppercase tracking-widest mt-0.5">Powered by Auth0 Token Vault</p>
         </div>
       </div>

@@ -1,4 +1,4 @@
-# Aegis Proxy — Final Review & Submission Plan
+# Midosoc — Final Review & Submission Plan
 
 **Date:** March 27, 2026  
 **Context:** "Authorized to Act" Hackathon (Auth0 for AI Agents)
@@ -9,7 +9,7 @@
 
 ### Executive Impression
 
-Aegis Proxy is a zero-trust security gateway for AI agents with a genuinely clever suspended-socket architecture and purposeful Auth0 Token Vault integration. The codebase is clean, modular, tested, and well-documented.
+Midosoc is a zero-trust security gateway for AI agents with a genuinely clever suspended-socket architecture and purposeful Auth0 Token Vault integration. The codebase is clean, modular, tested, and well-documented.
 
 **Score: 8.5 / 10** (hackathon-calibrated — this is strong)  
 **Sentiment: Love** (for a hackathon)
@@ -25,7 +25,7 @@ Aegis Proxy is a zero-trust security gateway for AI agents with a genuinely clev
 | No audit trail → JSONL persistence | ✅ `auditLog.js` + `/audit` endpoint + `AuditLog.tsx` panel |
 | Token Vault loop incomplete | ✅ `/external/execute` + Python simulator uses the token |
 | No empty state messaging | ✅ "All Clear — No Active Threats" with shield animation |
-| No threat-arrival animation | ✅ `aegis-threat-pulse` CSS animation |
+| No threat-arrival animation | ✅ `MIDOSOC-threat-pulse` CSS animation |
 | Dashboard auth hardcoded | ✅ Prod path extracts `session.tokenSet.accessToken` |
 
 ---
@@ -102,8 +102,8 @@ Aegis Proxy is a zero-trust security gateway for AI agents with a genuinely clev
    ```bash
    git init
    git add .
-   git commit -m "Aegis Proxy — hackathon submission"
-   git remote add origin https://github.com/YOUR_USER/aegis-proxy.git
+   git commit -m "Midosoc — hackathon submission"
+   git remote add origin https://github.com/YOUR_USER/midosoc.git
    git push -u origin main
    ```
 
@@ -190,7 +190,7 @@ In Auth0 Dashboard → your **Web Application** → Settings:
 
 | Time | Show | Say/Caption |
 |---|---|---|
-| 0:00–0:15 | Dashboard empty state | "Aegis Proxy is a zero-trust gateway for AI agents. It intercepts destructive actions and requires human authorization via Auth0 Token Vault." |
+| 0:00–0:15 | Dashboard empty state | "Midosoc is a zero-trust gateway for AI agents. It intercepts destructive actions and requires human authorization via Auth0 Token Vault." |
 | 0:15–0:40 | Run simulator — safe payload passes instantly | "Safe actions pass through instantly." |
 | 0:40–1:30 | Destructive payload → card appears on dashboard (SSE, real-time). Show forensic dossier: rationale, confidence, flagged markers, raw payload | "Destructive actions are suspended. The agent's HTTP connection hangs until a human decides." |
 | 1:30–2:10 | Click Approve → ConfirmModal → confirm → toast success → terminal shows token + `/external/execute` success | "On approval, Auth0 Token Vault issues an M2M token. The agent uses it to call the protected API." |
@@ -208,7 +208,7 @@ In Auth0 Dashboard → your **Web Application** → Settings:
 ### Step 6: Write the bonus blog post (optional)
 
 250+ words in the submission form text description with a clear header. Cover:
-- What Auth0 Token Vault does in Aegis (M2M token issued only after human approval)
+- What Auth0 Token Vault does in MIDOSOC (M2M token issued only after human approval)
 - The suspended-socket pattern (agent connection held open until human acts)
 - Why this matters for AI agent safety
 - How Token Vault is architecturally meaningful, not cosmetic

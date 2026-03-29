@@ -1,4 +1,4 @@
-# Aegis Proxy — Hackathon Sprint Plan
+# Midosoc — Hackathon Sprint Plan
 
 **Created:** March 26, 2026  
 **Source:** VP R&D Review feedback ([vp_rnd_review.md](../reviews/vp_rnd_review.md))  
@@ -254,13 +254,13 @@ Run Python simulator against production proxy URL. Verify full flow: inject → 
 
 | Time | Beat | Screen |
 |------|------|--------|
-| 0:00–0:15 | **Hook** | Black screen → text: *"Your AI agent just deleted your production database. Who authorized that?"* → Title card: **Aegis Proxy** |
+| 0:00–0:15 | **Hook** | Black screen → text: *"Your AI agent just deleted your production database. Who authorized that?"* → Title card: **Midosoc** |
 | 0:15–0:40 | **Problem statement** | Quick narration: AI agents are getting autonomous API access. No guardrails. One bad classification = catastrophe. We need human-in-the-loop auth for AI. |
 | 0:40–1:10 | **Safe flow** | Split screen: terminal (simulator) + dashboard. Agent sends `get_weather` → instant 200 response. Gateway classifies as safe. No suspension. "Safe actions flow through instantly." |
 | 1:10–2:10 | **Destructive flow (the money shot)** | Agent sends `delete_database` → terminal **hangs** (suspended socket!). Dashboard instantly lights up with forensic dossier. Show: LLM classification, confidence score 0.95, flagged markers `[delete, production]`. Analyst reviews → clicks **"Authorize via Token Vault"** → Auth0 Token Vault issues M2M token → terminal resumes → agent calls external API with vault token → ✅ **"Action authorized and executed."** |
-| 2:10–2:30 | **Architecture** | Quick diagram: Agent → Aegis Gateway → Policy Engine (LLM) → Human Review → Auth0 Token Vault → Protected API. Zero-trust. Defense-in-depth. |
+| 2:10–2:30 | **Architecture** | Quick diagram: Agent → MIDOSOC Gateway → Policy Engine (LLM) → Human Review → Auth0 Token Vault → Protected API. Zero-trust. Defense-in-depth. |
 | 2:30–2:50 | **Tech highlights** | "Suspended-socket pattern. Auth0 Token Vault delegation. LLM intent classification with heuristic fallback. Real-time SSE dashboard. 14 automated tests." |
-| 2:50–3:00 | **Close** | "Aegis Proxy. Auth0-powered human-in-the-loop authorization for autonomous AI agents." Live URL on screen. |
+| 2:50–3:00 | **Close** | "Midosoc. Auth0-powered human-in-the-loop authorization for autonomous AI agents." Live URL on screen. |
 
 ### Task 7.2 — Record the demo
 
@@ -282,7 +282,7 @@ Run Python simulator against production proxy URL. Verify full flow: inject → 
 
 **Outline (300–500 words):**
 1. **The problem:** AI agents are gaining autonomous access to production APIs — who's authorizing destructive actions?
-2. **Aegis Proxy:** A zero-trust gateway that intercepts agent requests and classifies intent using LLM analysis
+2. **Midosoc:** A zero-trust gateway that intercepts agent requests and classifies intent using LLM analysis
 3. **The suspended-socket pattern:** How we hold the agent's HTTP connection open in memory until a human decides
 4. **Auth0 Token Vault:** On approval, a delegation M2M token is issued via Client Credentials flow — the agent only gets the token *after* human step-up. On denial, no token is ever generated.
 5. **What's next:** Persistent audit trail, webhook notifications, multi-agent policy management
@@ -309,7 +309,7 @@ Add the deployed URLs to the README header. Link to the demo video and blog post
 
 ### Task 9.4 — Clean up verbose log messages
 
-Simplify the server startup banner from "Aegis Zero-Trust Intelligent SOC Gateway Engine definitively running" to something professional.
+Simplify the server startup banner from "MIDOSOC Zero-Trust Intelligent SOC Gateway Engine definitively running" to something professional.
 
 ---
 

@@ -1,4 +1,4 @@
-# VP R&D Review — Aegis Proxy
+# VP R&D Review — Midosoc
 
 **Reviewed:** March 25, 2026  
 **Context:** Hackathon submission — "Authorized to Act" (Auth0 for AI Agents)  
@@ -8,7 +8,7 @@
 
 ## 1) Executive Impression
 
-Aegis Proxy is a zero-trust security gateway that sits between autonomous AI agents and the outside world. When an agent tries to do something destructive (delete a database, transfer funds, grant admin), the gateway suspends the HTTP connection in memory and surfaces a forensic dossier to a human SOC analyst via a real-time dashboard. The analyst approves or denies, and the auth token flows (or doesn't) via Auth0 Token Vault.
+Midosoc is a zero-trust security gateway that sits between autonomous AI agents and the outside world. When an agent tries to do something destructive (delete a database, transfer funds, grant admin), the gateway suspends the HTTP connection in memory and surfaces a forensic dossier to a human SOC analyst via a real-time dashboard. The analyst approves or denies, and the auth token flows (or doesn't) via Auth0 Token Vault.
 
 **Immediate impression:** This is a genuinely clever hackathon idea. The "suspended socket" pattern is elegant — the AI agent's request literally hangs until a human makes a call. That's not just a UI demo; it's a real architectural mechanism. The Auth0 Token Vault integration is purposeful, not bolted on. The dashboard looks compelling for a 3-minute demo. The README is one of the strongest I've seen from a hackathon team — it's thorough, honest about limitations, and technically specific.
 

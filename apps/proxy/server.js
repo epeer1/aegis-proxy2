@@ -34,7 +34,7 @@ app.use(express.json({ limit: '100kb' }));
 
 
 // =========================================================================
-// ROUTE 1: THE UNIFIED AEGIS FIREWALL GATEWAY
+// ROUTE 1: THE UNIFIED MIDOSOC FIREWALL GATEWAY
 // =========================================================================
 const gatewayLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 1 minute
@@ -81,7 +81,7 @@ app.post('/proxy/execute', gatewayLimiter, async (req, res, next) => {
              return res.status(503).json({ error: 'System overloaded. Active request queue is full.' });
         }
         
-        logSOC('INFO', 'AEGIS_ENCLAVE', `Execution process ${requestId} locked flawlessly in RAM looping sockets. Awaiting SOC Level 1 dashboard authorization...`);
+        logSOC('INFO', 'MIDOSOC_ENCLAVE', `Execution process ${requestId} locked flawlessly in RAM looping sockets. Awaiting SOC Level 1 dashboard authorization...`);
     } catch (err) {
         next(err);
     }
@@ -105,7 +105,7 @@ app.post('/queue/approve/:id', requireAuth0JWT, requirePermission('approve:reque
         // Mandatory live Auth0 Token Vault execution linkage ping
         const vaultToken = await getVaultToken();
 
-        logSOC('INFO', 'AEGIS_ENCLAVE', `Discharging locked execution loop back to agent.`);
+        logSOC('INFO', 'MIDOSOC_ENCLAVE', `Discharging locked execution loop back to agent.`);
         
         // Record audit trail
         recordDecision({
@@ -145,7 +145,7 @@ app.post('/queue/deny/:id', requireAuth0JWT, requirePermission('deny:requests'),
         }
 
         logSOC('WARN', 'APPROVER', `Live SOC Authorization EXPLICITLY DENIED for Process ${id}!`);
-        logSOC('INFO', 'AEGIS_ENCLAVE', `Terminating suspended request from execution loop.`);
+        logSOC('INFO', 'MIDOSOC_ENCLAVE', `Terminating suspended request from execution loop.`);
         
         // Record audit trail
         recordDecision({
@@ -290,7 +290,7 @@ let serverInstance = null;
 if (require.main === module) {
     const PORT = process.env.PORT || 3001;
     serverInstance = app.listen(PORT, () => {
-        logSOC('SUCCESS', 'SYSTEM', `Aegis Proxy gateway listening on http://localhost:${PORT}`);
+        logSOC('SUCCESS', 'SYSTEM', `Midosoc gateway listening on http://localhost:${PORT}`);
     });
 } else {
     module.exports = { app, PolicyEngine, queueManager, serverInstance };

@@ -135,6 +135,6 @@
   100% { box-shadow: 0 0 40px rgba(153, 27, 27, 0.15); }
 }
 
-.aegis-threat-pulse {
+.midosoc-threat-pulse {
   animation: threat-pulse 2s ease-in-out 1;
 }

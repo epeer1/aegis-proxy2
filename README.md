@@ -1,6 +1,6 @@
-# Aegis Proxy — Zero-Trust Gateway for Autonomous AI Agents
+# Midosoc — Zero-Trust Gateway for Autonomous AI Agents
 
-Aegis Proxy is a security middlebox that sits between autonomous AI agents (LangChain, AutoGPT, custom LLM tools, etc.) and the actions they want to execute. It enforces human-in-the-loop authorization for destructive operations using a real-time SOC analyst dashboard. Safe actions pass through instantly. Destructive actions are suspended—socket held open in memory—until a human approves or denies them through the dashboard, at which point an Auth0 M2M vault token is issued and returned to the agent.
+Midosoc is a security middlebox that sits between autonomous AI agents (LangChain, AutoGPT, custom LLM tools, etc.) and the actions they want to execute. It enforces human-in-the-loop authorization for destructive operations using a real-time SOC analyst dashboard. Safe actions pass through instantly. Destructive actions are suspended—socket held open in memory—until a human approves or denies them through the dashboard, at which point an Auth0 M2M vault token is issued and returned to the agent.
 
 ---
 
@@ -75,7 +75,7 @@ Agent                    Proxy (:3001)              Dashboard (:3000)           
 ## Repository Structure
 
 ```
-aegis-proxy2/
+midosoc/
 ├── apps/
 │   ├── proxy/                      # Node.js backend gateway (:3001)
 │   │   ├── server.js               # Express app — routes, SSE, error handling
@@ -241,7 +241,7 @@ Copy from `apps/dashboard/.env.example`:
 ### 1. Install dependencies
 
 ```bash
-cd aegis-proxy2
+cd midosoc2
 npm install
 ```
 
@@ -272,7 +272,7 @@ For **local dev without Auth0 auth**, you can leave Auth0 credentials pointing t
 ```bash
 cd apps/proxy
 node server.js
-# Aegis Proxy gateway listening on http://localhost:3001
+# Midosoc gateway listening on http://localhost:3001
 ```
 
 > **Important**: Run from the `apps/proxy` directory (or use `node apps/proxy/server.js` from root). The server loads `.env` relative to `server.js` using `__dirname`, so CWD does not matter.
@@ -318,12 +318,12 @@ Both services use `node:20-alpine`. Env files are loaded from `apps/proxy/.env` 
 
 ## Connecting Your Own Agents
 
-Have your agent POST to the Aegis gateway instead of executing sensitive actions directly:
+Have your agent POST to the MIDOSOC gateway instead of executing sensitive actions directly:
 
 ```python
 import requests
 
-AEGIS_GATEWAY = "http://localhost:3001/proxy/execute"
+MIDOSOC_GATEWAY = "http://localhost:3001/proxy/execute"
 
 payload = {
     "agent_id": "my-agent",
@@ -333,7 +333,7 @@ payload = {
 }
 
 # Set a high timeout — the socket hangs until a human approves/denies
-response = requests.post(AEGIS_GATEWAY, json=payload, timeout=300)
+response = requests.post(MIDOSOC_GATEWAY, json=payload, timeout=300)
 
 if response.status_code == 200:
     result = response.json()
@@ -459,7 +459,7 @@ python autonomous_client.py
 
 ### `scripts/pipelines/hackathon_pipeline.py`
 
-A separate multi-model ideation pipeline used during hackathon planning. Not part of the Aegis Proxy product. Uses instructor + litellm to orchestrate structured outputs from Gemini, GPT-4o, and Claude.
+A separate multi-model ideation pipeline used during hackathon planning. Not part of the Midosoc product. Uses instructor + litellm to orchestrate structured outputs from Gemini, GPT-4o, and Claude.
 
 ---
 

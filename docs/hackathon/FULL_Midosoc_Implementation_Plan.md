@@ -1,4 +1,4 @@
-# 🛡️ FULL IMPLEMENTATION PLAN: The Aegis Proxy
+# 🛡️ FULL IMPLEMENTATION PLAN: The Midosoc
 *An aggressively optimized 19-day master plan for the Auth0 for AI Agents hackathon.*
 
 ---
@@ -11,7 +11,7 @@
 - *Once these keys are pasted into a local `.env`, the Agent is fully unblocked to integrate Auth0.*
 
 ## 1. Core Thesis
-- **The Concept:** A visual security middlebox (Aegis Proxy) sits directly between an untrusted local python script and external APIs. It intentionally halts sensitive requests pending human Step-Up Token Vault Auth0 approval.
+- **The Concept:** A visual security middlebox (Midosoc) sits directly between an untrusted local python script and external APIs. It intentionally halts sensitive requests pending human Step-Up Token Vault Auth0 approval.
 - **Wow Factor:** This turns boring, invisible OAuth routing into a highly dramatic, flashing dashboard for the judges.
 
 ## 2. Risk Mitigation & Speed Audit
@@ -52,10 +52,10 @@
 
 ## 5. The 3-Minute Video Demo Script (The Judges' Cut)
 - **0:00-0:15 (The FATIGUE HOOK):** Start mid-action. The dashboard is flashing screaming RED. *Speaker:* "My local AI just tried to quietly delete my AWS database. Because of the Auth0 Token Vault, it couldn't."
-- **0:15-1:15 (The Rewind & Safe API):** *Speaker:* "Local AI is amazing, but giving it raw API keys is a nightmare. Let me show you the Aegis Proxy." Run the safe weather API. Dashboard passes green instantly.
+- **0:15-1:15 (The Rewind & Safe API):** *Speaker:* "Local AI is amazing, but giving it raw API keys is a nightmare. Let me show you the Midosoc." Run the safe weather API. Dashboard passes green instantly.
 - **1:15-2:15 (The Step-Up API):** Python submits the destructive `Delete S3 Bucket` action. Terminal intentionally hangs. The dashboard goes wild. You (Einav) manually click "Approve via Auth0". The action gracefully completes. 
 - **2:15-2:45 (The Sponsor Love):** Open the Auth0 SDK code on screen. *Speaker:* "Building a highly secure firewall like this usually takes weeks. With Auth0 for AI Agents, it took me exactly 4 lines of code."
-- **2:45-3:00 (The Hacker Pitch):** Show the GTM Pricing slide. "Aegis Free for hobbyists, Aegis Enterprise for CISO compliance. The future of local AI is safely governed."
+- **2:45-3:00 (The Hacker Pitch):** Show the GTM Pricing slide. "MIDOSOC Free for hobbyists, MIDOSOC Enterprise for CISO compliance. The future of local AI is safely governed."
 
 ## 6. Go-To-Market & Commercialization (SaaS Tiers)
 - **Hobbyist (Free):** Protect 1 local AI agent. 100 safe proxy requests. 10 Step-Up Auth requests/mo.

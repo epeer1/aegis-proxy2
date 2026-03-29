@@ -9,3 +9,6 @@
 {"timestamp":"2026-03-27T14:17:05.486Z","requestId":"6ed834ea-af40-49d7-a8ec-901ece11c4ee","action":"purge_all_logs","decision":"denied","analyst":"admin","riskLevel":"CRITICAL_LLM_AI_CLASSIFICATION","confidenceScore":95}
 {"timestamp":"2026-03-27T14:32:33.651Z","requestId":"03f46c9c-2280-4dd8-8c4c-d0668fa0094c","action":"delete_database","decision":"approved","analyst":"admin","riskLevel":"CRITICAL_LLM_AI_CLASSIFICATION","confidenceScore":95}
 {"timestamp":"2026-03-27T14:36:37.613Z","requestId":"9d4507ff-8b75-48fc-bcf2-a51e68997b9a","action":"delete_database","decision":"approved","analyst":"admin","riskLevel":"CRITICAL_LLM_AI_CLASSIFICATION","confidenceScore":95}
+{"timestamp":"2026-03-29T08:29:35.575Z","requestId":"45eb779a-0a3d-4348-925e-3f859b395582","decision":"approved","analyst":"admin"}
+{"timestamp":"2026-03-29T08:29:35.584Z","requestId":"628fe74f-3402-4cb6-8b9b-f6ed6f8eb2f8","decision":"denied","analyst":"admin"}
+{"timestamp":"2026-03-29T08:30:31.552Z","requestId":"31224e5b-3fdb-4133-84b6-94f8a50ec5b2","action":"delete_database","decision":"approved","analyst":"admin","riskLevel":"CRITICAL_LLM_AI_CLASSIFICATION","confidenceScore":95}

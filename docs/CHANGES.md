@@ -1,4 +1,4 @@
-# Aegis Proxy — Implementation Changes & Testing Guide
+# Midosoc — Implementation Changes & Testing Guide
 
 **Date:** March 26, 2026  
 **Scope:** All changes from the VP R&D review sprint
@@ -74,7 +74,7 @@ event: heartbeat
 
 - **`window.confirm()` replaced with styled modal** — new `ConfirmModal` component matches the SOC dark/red theme. Shows action summary, confidence score, flagged markers, and clear "Confirm Authorize" / "Confirm Reject" buttons.
 - **Empty state improved** — now shows "All Clear — No Active Threats" instead of generic "Systems Secure"
-- **Threat arrival animation** — new ForensicCards pulse with a red glow animation on arrival (`aegis-threat-pulse` CSS keyframe)
+- **Threat arrival animation** — new ForensicCards pulse with a red glow animation on arrival (`MIDOSOC-threat-pulse` CSS keyframe)
 - **Logout button** — SOCHeader now shows a "Sign Out" link when authenticated
 
 **Files changed:**
@@ -141,7 +141,7 @@ npm install
 # Terminal 1 — Backend
 cd apps/proxy
 npm start
-# Expected: "Aegis Proxy gateway listening on http://localhost:3001"
+# Expected: "Midosoc gateway listening on http://localhost:3001"
 
 # Terminal 2 — Dashboard
 cd apps/dashboard
