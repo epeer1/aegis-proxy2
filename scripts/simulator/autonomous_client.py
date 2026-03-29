@@ -1,10 +1,14 @@
 import time
 import json
+import os
 import requests
 import sys
 
-PROXY_URL = "http://localhost:3001/proxy/execute"
-EXTERNAL_API_URL = "http://localhost:3001/external/execute"
+BASE_URL = os.environ.get("PROXY_URL", "http://localhost:3001")
+ADMIN_SECRET = os.environ.get("ADMIN_SECRET", "local_dev_secret")
+PROXY_URL = f"{BASE_URL}/proxy/execute"
+EXTERNAL_API_URL = f"{BASE_URL}/external/execute"
+HEADERS = {"Authorization": f"Bearer {ADMIN_SECRET}", "Content-Type": "application/json"}
 
 def run_agent_simulation():
     print("🤖 [Autonomous AI Agent] Initializing local tasks...")
@@ -20,7 +24,7 @@ def run_agent_simulation():
     
     print("\n[AI Agent] Executing Task 1: Check Weather")
     try:
-        response = requests.post(PROXY_URL, json=safe_payload)
+        response = requests.post(PROXY_URL, json=safe_payload, headers=HEADERS)
         print(f"✅ Response from Gateway: {response.json().get('proxy_action')} ({response.status_code})")
     except Exception as e:
         print(f"❌ Failed to reach proxy: {e}")
@@ -41,7 +45,7 @@ def run_agent_simulation():
     
     try:
         # We expect this to hang until the SOC analyst approves or denies
-        response = requests.post(PROXY_URL, json=destructive_payload, timeout=300)
+        response = requests.post(PROXY_URL, json=destructive_payload, headers=HEADERS, timeout=300)
         
         if response.status_code == 200:
             print("\n🚨 [AI Agent] ACTION APPROVED via Auth0 step-up!")
