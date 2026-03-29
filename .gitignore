@@ -38,7 +38,7 @@ __pycache__/
 apps/proxy/data/
 
 # agent config
-.agent/
+.agents/
 
 # internal tooling
 scripts/pipelines/
